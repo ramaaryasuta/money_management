@@ -1,3 +1,3 @@
 abstract class TableName {
-  static String transaction = 'transaction';
+  static String transaction = 'transaction_user';
 }

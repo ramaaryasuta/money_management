@@ -11,7 +11,7 @@ class DbHelper {
 
   static Database? _db;
 
-  Future<Database> get database async => _db ?? await _init();
+  Future<Database> get database async => _db ??= await _init();
 
   Future<Database> _init() async {
     final path = join(await getDatabasesPath(), 'money_management.db');
