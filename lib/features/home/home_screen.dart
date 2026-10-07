@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
-import '../../core/database/db_helper.dart';
-import '../transaction/data/transaction_local_datasource.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../transaction/data/transaction_repository_impl.dart';
 import '../transaction/domain/transaction_data.dart';
+import '../transaction/domain/transaction_repository.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final _dataSource = TransactionLocalDatasource(DbHelper.instance);
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  late TransactionRepository _repo;
 
   List<TransactionData> _data = [];
 
   @override
   void initState() {
     super.initState();
+    _repo = ref.read(transactionRepositoryProvider);
     _load();
   }
 
   Future<void> _load() async {
-    final result = await _dataSource.getAll();
+    final result = await _repo.getAll();
     setState(() {
       _data = result;
     });
@@ -69,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () async {
                 final jumlah = int.tryParse(jumlahC.text);
                 if (judulC.text.isEmpty || jumlah == null) return;
-                await _dataSource.insert(
+                await _repo.add(
                   TransactionData(
                     title: judulC.text,
                     value: jumlah,
@@ -89,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _hapus(TransactionData t) async {
-    await _dataSource.delete(t.id!);
+    await _repo.delete(t.id!);
     _load();
   }
 

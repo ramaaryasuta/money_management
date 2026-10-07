@@ -1,6 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'table_name.dart';
+
+final dbHelperProvider = Provider<DbHelper>((ref) {
+  return DbHelper.instance;
+});
 
 class DbHelper {
   DbHelper._();

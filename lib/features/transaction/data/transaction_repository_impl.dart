@@ -1,9 +1,15 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../domain/transaction_data.dart';
 import '../domain/transaction_failure.dart';
 import '../domain/transaction_repository.dart';
 import 'transaction_local_datasource.dart';
+
+final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
+  final localDatasource = ref.watch(transactionLocalDatasourceProvider);
+  return TransactionRepositoryImpl(localDatasource);
+});
 
 class TransactionRepositoryImpl implements TransactionRepository {
   const TransactionRepositoryImpl(this._localData);
@@ -54,10 +60,12 @@ class TransactionRepositoryImpl implements TransactionRepository {
         );
       }
 
-      final updatedId = await _localData.update(t);
+      final affectedRow = await _localData.update(t);
 
-      if (updatedId == 0) {
-        throw TransactionFailure(message: 'Transaction ${t.title} not found');
+      if (affectedRow == 0) {
+        throw TransactionFailure(
+          message: 'Transaction with id ${t.id} not found',
+        );
       }
     } on DatabaseException catch (e) {
       throw TransactionFailure(

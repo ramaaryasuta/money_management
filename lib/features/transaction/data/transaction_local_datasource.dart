@@ -1,7 +1,16 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/database/db_helper.dart';
 import '../../../core/database/table_name.dart';
 import '../domain/transaction_data.dart';
 import 'transaction_mapper.dart';
+
+final transactionLocalDatasourceProvider = Provider<TransactionLocalDatasource>(
+  (ref) {
+    final dbHelper = ref.watch(dbHelperProvider);
+    return TransactionLocalDatasource(dbHelper);
+  },
+);
 
 class TransactionLocalDatasource {
   TransactionLocalDatasource(this._dbHelper);
