@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:money_management/features/home/home_screen.dart';
+import 'features/home/home_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -10,6 +10,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreen());
+    return const MaterialApp(home: HomeScreen());
   }
 }

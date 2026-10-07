@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:money_management/core/database/db_helper.dart';
-import 'package:money_management/models/transaction.dart';
+import '../../core/database/db_helper.dart';
+import '../transaction/data/transaction_local_datasource.dart';
+import '../transaction/domain/transaction_data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,6 +11,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _dataSource = TransactionLocalDatasource(DbHelper.instance);
+
   List<TransactionData> _data = [];
 
   @override
@@ -19,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
-    final result = await DbHelper.instance.getAll();
+    final result = await _dataSource.getAll();
     setState(() {
       _data = result;
     });
@@ -66,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () async {
                 final jumlah = int.tryParse(jumlahC.text);
                 if (judulC.text.isEmpty || jumlah == null) return;
-                await DbHelper.instance.insert(
+                await _dataSource.insert(
                   TransactionData(
                     title: judulC.text,
                     value: jumlah,
@@ -86,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _hapus(TransactionData t) async {
-    await DbHelper.instance.delete(t.id!);
+    await _dataSource.delete(t.id!);
     _load();
   }
 
