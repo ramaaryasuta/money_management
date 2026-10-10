@@ -4,7 +4,7 @@ import 'package:money_management/features/transaction/domain/transaction_data.da
 void main() {
   group('TransactionData equality', () {
     final date = DateTime(2026, 10, 1);
-    test('equal object have the same hashCode', () {
+    test('equal objects have the same hashCode', () {
       final a = TransactionData(
         title: 'Coffe',
         value: 100,
@@ -59,7 +59,7 @@ void main() {
       expect(result, 20000);
     });
 
-    test('returns negative value for income', () {
+    test('returns negative value for expense', () {
       // Arr
       final transaction = TransactionData(
         title: 'Test expense',
@@ -126,7 +126,7 @@ void main() {
       );
     });
 
-    test('change id field', () {
+    test('replaces id and keeps other fields', () {
       // Act
       final result = original.copyWith(id: 5);
 
