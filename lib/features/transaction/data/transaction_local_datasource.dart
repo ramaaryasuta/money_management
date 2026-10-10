@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/db_helper.dart';
 import '../../../core/database/table_name.dart';
+import '../../../core/database/transaction_column.dart';
 import '../domain/transaction_data.dart';
 import 'transaction_mapper.dart';
 
@@ -20,14 +21,18 @@ class TransactionLocalDatasource {
   // CREATE
   Future<int> insert(TransactionData t) async {
     final db = await _dbHelper.database;
-    final data = t.toMap()..remove('id'); // create auto id when insert
+    final data = t.toMap()
+      ..remove(TransactionColumn.id); // create auto id when insert
     return db.insert(TableName.transaction, data);
   }
 
   // READ
   Future<List<TransactionData>> getAll() async {
     final db = await _dbHelper.database;
-    final rows = await db.query(TableName.transaction, orderBy: 'date DESC');
+    final rows = await db.query(
+      TableName.transaction,
+      orderBy: '${TransactionColumn.date} DESC',
+    );
     return rows.map(transactionDataFromMap).toList();
   }
 
@@ -37,7 +42,7 @@ class TransactionLocalDatasource {
     return db.update(
       TableName.transaction,
       t.toMap(),
-      where: 'id = ?',
+      where: '${TransactionColumn.id} = ?',
       whereArgs: [t.id],
     );
   }
@@ -45,6 +50,10 @@ class TransactionLocalDatasource {
   // DELETE
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
-    return db.delete(TableName.transaction, where: 'id = ?', whereArgs: [id]);
+    return db.delete(
+      TableName.transaction,
+      where: '${TransactionColumn.id} = ?',
+      whereArgs: [id],
+    );
   }
 }
