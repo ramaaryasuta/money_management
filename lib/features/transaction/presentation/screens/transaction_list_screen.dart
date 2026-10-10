@@ -3,111 +3,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/transaction_data.dart';
 import '../../domain/transaction_failure.dart';
-import '../notifers/transaction_list_notifier.dart';
+import '../notifiers/transaction_list_notifier.dart';
+import '../widgets/balance_header.dart';
+import '../widgets/transaction_form_sheet.dart';
+import '../widgets/transaction_tile.dart';
 
-class TransactionListScreen extends ConsumerStatefulWidget {
+class TransactionListScreen extends ConsumerWidget {
   const TransactionListScreen({super.key});
 
-  @override
-  ConsumerState<TransactionListScreen> createState() =>
-      _TransactionListScreenState();
-}
-
-class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
-  Future<void> _add() async {
-    final titleC = TextEditingController();
-    final totalC = TextEditingController();
-    String? errorMessage;
-    bool income = false;
-
-    await showDialog(
+  void _openTransactionFormSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setLocal) => AlertDialog(
-          title: const Text('New Transaction'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleC,
-                decoration: const InputDecoration(labelText: 'Title'),
-              ),
-              TextField(
-                controller: totalC,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Total'),
-              ),
-              SwitchListTile(
-                title: Text(income ? 'Income' : 'Expense'),
-                value: income,
-                onChanged: (v) => setLocal(() => income = v),
-              ),
-
-              // error message
-              if (errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: .1),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Text(
-                    errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
-            ],
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final total = int.tryParse(totalC.text);
-                if (titleC.text.isEmpty || total == null) return;
-                setLocal(() {
-                  errorMessage = null;
-                });
-                try {
-                  await ref
-                      .read(transactionListProvider.notifier)
-                      .add(
-                        TransactionData(
-                          title: titleC.text,
-                          value: total,
-                          isIncome: income,
-                          date: DateTime.now(),
-                        ),
-                      );
-                  if (context.mounted) Navigator.pop(context);
-                } on TransactionFailure catch (e) {
-                  if (!context.mounted) return;
-                  setLocal(() {
-                    errorMessage = e.message;
-                  });
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => const TransactionFormSheet(),
     );
   }
 
-  Future<bool> _delete(TransactionData t) async {
+  Future<bool> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionData t,
+  ) async {
     try {
       await ref.read(transactionListProvider.notifier).delete(t.id!);
       return true;
     } on TransactionFailure catch (e) {
-      if (!mounted) return false;
+      if (!context.mounted) return false;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.message)));
@@ -116,7 +39,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final transactionListAsync = ref.watch(transactionListProvider);
     final loadedTransactions = transactionListAsync.value;
     final balance = loadedTransactions?.fold(
@@ -129,7 +52,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
       body: Column(
         children: [
           // Total Amount
-          Text('Balance: ${balance ?? '-'}'),
+          BalanceHeader(balance: balance),
 
           // Transaction List Content
           Expanded(
@@ -143,7 +66,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${transactionListAsync.isLoading ? 'Retry' : 'Failed'} to load transaction',
+                        transactionListAsync.isLoading
+                            ? 'Retrying...'
+                            : 'Retry to load transaction',
                       ),
                       if (transactionListAsync.isLoading)
                         const CircularProgressIndicator()
@@ -166,33 +91,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                   itemCount: transactions.length,
                   itemBuilder: (_, i) {
                     final t = transactions[i];
-                    return Dismissible(
-                      key: ValueKey(t.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 16),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      confirmDismiss: (_) => _delete(t),
-                      child: ListTile(
-                        leading: Icon(
-                          t.isIncome
-                              ? Icons.arrow_downward
-                              : Icons.arrow_upward,
-                          color: t.isIncome ? Colors.green : Colors.red,
-                        ),
-                        title: Text(t.title),
-                        subtitle: Text(t.date.toString().substring(0, 16)),
-                        trailing: Text(
-                          '${t.isIncome ? '+' : '-'}${t.value}',
-                          style: TextStyle(
-                            color: t.isIncome ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    return TransactionTile(
+                      transaction: t,
+                      onDelete: (t) async => _delete(context, ref, t),
                     );
                   },
                 );
@@ -202,7 +103,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _add,
+        onPressed: () => _openTransactionFormSheet(context),
         child: const Icon(Icons.add),
       ),
     );
