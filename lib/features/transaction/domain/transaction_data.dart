@@ -31,4 +31,22 @@ class TransactionData {
       date: date ?? this.date,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TransactionData &&
+        other.id == id &&
+        other.title == title &&
+        other.value == value &&
+        other.isIncome == isIncome &&
+        other.date == date;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, title, value, isIncome, date);
+
+  @override
+  String toString() =>
+      'TransactionData(id: $id, title: $title, value: $value, isIncome: $isIncome, date: $date)';
 }
