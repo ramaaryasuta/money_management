@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../transaction/domain/transaction_data.dart';
-import '../transaction/domain/transaction_failure.dart';
-import '../transaction/presentation/transaction_list_notifier.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+import '../../domain/transaction_data.dart';
+import '../../domain/transaction_failure.dart';
+import '../notifers/transaction_list_notifier.dart';
+
+class TransactionListScreen extends ConsumerStatefulWidget {
+  const TransactionListScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<TransactionListScreen> createState() =>
+      _TransactionListScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   Future<void> _add() async {
     final titleC = TextEditingController();
     final totalC = TextEditingController();

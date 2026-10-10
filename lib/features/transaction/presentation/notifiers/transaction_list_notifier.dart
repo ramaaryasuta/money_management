@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/transaction_repository_impl.dart';
-import '../domain/transaction_data.dart';
+import '../../data/transaction_repository_impl.dart';
+import '../../domain/transaction_data.dart';
 
 final transactionListProvider =
     AsyncNotifierProvider<TransactionListNotifier, List<TransactionData>>(

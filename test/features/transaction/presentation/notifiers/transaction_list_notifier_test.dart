@@ -4,7 +4,7 @@ import 'package:money_management/features/transaction/data/transaction_repositor
 import 'package:money_management/features/transaction/domain/transaction_data.dart';
 import 'package:money_management/features/transaction/domain/transaction_failure.dart';
 import 'package:money_management/features/transaction/domain/transaction_repository.dart';
-import 'package:money_management/features/transaction/presentation/transaction_list_notifier.dart';
+import 'package:money_management/features/transaction/presentation/notifers/transaction_list_notifier.dart';
 
 class FakeTransactionRepository implements TransactionRepository {
   /// fake database: list on memory
