@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/riverpod_util.dart';
 import '../data/transaction_repository_impl.dart';
 import '../domain/transaction_data.dart';
 
 final transactionListProvider =
     AsyncNotifierProvider<TransactionListNotifier, List<TransactionData>>(
       TransactionListNotifier.new,
+      retry: fixedRetry,
     );
 
 class TransactionListNotifier extends AsyncNotifier<List<TransactionData>> {
@@ -27,17 +29,11 @@ class TransactionListNotifier extends AsyncNotifier<List<TransactionData>> {
 
   Future<void> delete(int id) async {
     final repo = ref.read(transactionRepositoryProvider);
-    final previous = state.value ?? [];
 
+    await repo.delete(id);
+    final previous = state.value ?? [];
     state = AsyncData(
       previous.where((item) => item.id != id).toList(),
     ); // without deleted item
-
-    try {
-      await repo.delete(id);
-    } catch (e) {
-      state = AsyncData(previous);
-      rethrow;
-    }
   }
 }
