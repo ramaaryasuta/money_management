@@ -173,7 +173,7 @@ void main() {
       ]);
     });
 
-    test('failed to build() return error', () async {
+    test('build throws when repository fails', () async {
       fakeRepo.shouldFail = true;
 
       await expectLater(
