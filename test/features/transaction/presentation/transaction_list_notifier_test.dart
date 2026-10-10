@@ -65,6 +65,7 @@ void main() {
     fakeRepo = FakeTransactionRepository();
     container = ProviderContainer.test(
       overrides: [transactionRepositoryProvider.overrideWithValue(fakeRepo)],
+      retry: (_, _) => null,
     );
   });
 
@@ -170,6 +171,17 @@ void main() {
         oldTransaction,
         sampleTransaction,
       ]);
+    });
+
+    test('failed to build() return error', () async {
+      fakeRepo.shouldFail = true;
+
+      await expectLater(
+        container.read(transactionListProvider.future),
+        throwsA(isA<TransactionFailure>()),
+      );
+
+      expect(container.read(transactionListProvider).hasError, isTrue);
     });
   });
 }
