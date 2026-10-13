@@ -44,15 +44,14 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
   }
 
   bool get _canSave {
-    if (_draft != null && !_isSaving) {
-      return true;
-    }
+    final draft = _draft;
 
-    if (_isEditing && _draft != widget.initial) {
-      return true;
-    }
+    // input tidak valid, atau sedang menyimpan
+    if (draft == null || _isSaving) return false;
 
-    return false;
+    // mode edit tanpa perubahan
+    if (_isEditing && draft == widget.initial) return false;
+    return true;
   }
 
   @override
