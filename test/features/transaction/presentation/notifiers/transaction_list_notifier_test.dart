@@ -184,26 +184,73 @@ void main() {
       ]);
     });
 
-    test('update success with given field', () async {
-      fakeRepo.transactions.add(oldTransaction);
-      await container.read(transactionListProvider.future);
+    group('Edit', () {
+      final first = TransactionData(
+        id: 3,
+        title: 'Coffee',
+        value: 20,
+        isIncome: false,
+        date: DateTime(2026, 10, 12),
+      );
+      final middle = TransactionData(
+        id: 2,
+        title: 'Lunch',
+        value: 50,
+        isIncome: false,
+        date: DateTime(2026, 10, 11),
+      );
+      final last = TransactionData(
+        id: 1,
+        title: 'Salary',
+        value: 1000,
+        isIncome: true,
+        date: DateTime(2026, 10, 10),
+      );
 
-      // act
-      await container
-          .read(transactionListProvider.notifier)
-          .updating(oldTransaction.copyWith(title: 'Latte', value: 2000));
+      test('replaces the edited transaction in place', () async {
+        fakeRepo.transactions.addAll([first, middle, last]);
+        await container.read(transactionListProvider.future);
 
-      // assert
-      final state = container.read(transactionListProvider).value;
-      expect(state, [
-        TransactionData(
-          id: 1,
-          title: 'Latte',
-          value: 2000,
-          isIncome: true,
-          date: DateTime(2026, 10, 10),
-        ),
-      ]);
+        final edited = middle.copyWith(title: 'Dinner', value: 90);
+
+        // act
+        await container.read(transactionListProvider.notifier).edit(edited);
+
+        // assert
+        final state = container.read(transactionListProvider).value;
+        expect(state, [first, edited, last]);
+      });
+
+      test('saves the change to the repository', () async {
+        fakeRepo.transactions.addAll([first, middle, last]);
+        await container.read(transactionListProvider.future);
+
+        final edited = middle.copyWith(title: 'Dinner', value: 90);
+
+        // act
+        await container.read(transactionListProvider.notifier).edit(edited);
+        expect(fakeRepo.transactions, [first, edited, last]);
+      });
+
+      test('throws and keeps state when repository fails', () async {
+        fakeRepo.transactions.addAll([first, middle, last]);
+        await container.read(transactionListProvider.future);
+
+        fakeRepo.shouldFail = true;
+
+        final edited = middle.copyWith(title: 'Dinner', value: 90);
+
+        await expectLater(
+          container.read(transactionListProvider.notifier).edit(edited),
+          throwsA(isA<TransactionFailure>()),
+        );
+
+        expect(container.read(transactionListProvider).value, [
+          first,
+          middle,
+          last,
+        ]);
+      });
     });
   });
 }
