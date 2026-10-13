@@ -34,4 +34,20 @@ class TransactionListNotifier extends AsyncNotifier<List<TransactionData>> {
       previous.where((item) => item.id != id).toList(),
     ); // without deleted item
   }
+
+  Future<void> updating(TransactionData t) async {
+    final repo = ref.read(transactionRepositoryProvider);
+
+    final current = state.value ?? [];
+    await repo.update(t);
+
+    final updateIndex = current.indexWhere((d) => d.id == t.id);
+
+    if (updateIndex != -1) {
+      final updatedList = [...current];
+      updatedList[updateIndex] = t;
+
+      state = AsyncData(updatedList);
+    }
+  }
 }

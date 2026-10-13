@@ -84,6 +84,17 @@ void main() {
       isIncome: false,
       date: DateTime(2026, 10, 10),
     );
+
+    test('build throws when repository fails', () async {
+      fakeRepo.shouldFail = true;
+
+      await expectLater(
+        container.read(transactionListProvider.future),
+        throwsA(isA<TransactionFailure>()),
+      );
+
+      expect(container.read(transactionListProvider).hasError, isTrue);
+    });
     test('build loads transactions from repository', () async {
       // arr
       fakeRepo.transactions.add(oldTransaction);
@@ -173,15 +184,26 @@ void main() {
       ]);
     });
 
-    test('build throws when repository fails', () async {
-      fakeRepo.shouldFail = true;
+    test('update success with given field', () async {
+      fakeRepo.transactions.add(oldTransaction);
+      await container.read(transactionListProvider.future);
 
-      await expectLater(
-        container.read(transactionListProvider.future),
-        throwsA(isA<TransactionFailure>()),
-      );
+      // act
+      await container
+          .read(transactionListProvider.notifier)
+          .updating(oldTransaction.copyWith(title: 'Latte', value: 2000));
 
-      expect(container.read(transactionListProvider).hasError, isTrue);
+      // assert
+      final state = container.read(transactionListProvider).value;
+      expect(state, [
+        TransactionData(
+          id: 1,
+          title: 'Latte',
+          value: 2000,
+          isIncome: true,
+          date: DateTime(2026, 10, 10),
+        ),
+      ]);
     });
   });
 }
