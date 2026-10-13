@@ -6,7 +6,9 @@ import '../../domain/transaction_failure.dart';
 import '../notifiers/transaction_list_notifier.dart';
 
 class TransactionFormSheet extends ConsumerStatefulWidget {
-  const TransactionFormSheet({super.key});
+  const TransactionFormSheet({super.key, this.initial});
+
+  final TransactionData? initial;
 
   @override
   ConsumerState<TransactionFormSheet> createState() =>
@@ -20,14 +22,48 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
   bool _isSaving = false;
   String? _errorMsg;
 
+  bool get _isEditing => widget.initial != null;
+
   int? get _parsedAmount => int.tryParse(_amountCtrl.text.trim());
 
+  TransactionData? get _draft {
+    final amount = _parsedAmount;
+    final title = _titleCtrl.text.trim();
+    if (title.isEmpty || amount == null) return null;
+
+    final initial = widget.initial;
+    if (initial != null) {
+      return initial.copyWith(title: title, value: amount, isIncome: _isIncome);
+    }
+    return TransactionData(
+      title: title,
+      value: amount,
+      isIncome: _isIncome,
+      date: DateTime.now(),
+    );
+  }
+
   bool get _canSave {
-    if (_titleCtrl.text.trim().isEmpty || _parsedAmount == null || _isSaving) {
-      return false;
+    if (_draft != null && !_isSaving) {
+      return true;
     }
 
-    return true;
+    if (_isEditing && _draft != widget.initial) {
+      return true;
+    }
+
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    if (initial != null) {
+      _titleCtrl.text = initial.title;
+      _amountCtrl.text = initial.value.toString();
+      _isIncome = initial.isIncome;
+    }
   }
 
   @override
@@ -42,17 +78,16 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
       _errorMsg = null;
       _isSaving = true;
     });
+
     try {
-      await ref
-          .read(transactionListProvider.notifier)
-          .add(
-            TransactionData(
-              title: _titleCtrl.text.trim(),
-              value: _parsedAmount!,
-              isIncome: _isIncome,
-              date: DateTime.now(),
-            ),
-          );
+      if (_isEditing) {
+        // save edit transaction
+        await ref.read(transactionListProvider.notifier).edit(_draft!);
+      } else {
+        // create new transaction
+        await ref.read(transactionListProvider.notifier).add(_draft!);
+      }
+
       if (mounted) Navigator.pop(context);
     } on TransactionFailure catch (e) {
       if (!mounted) return;
@@ -81,7 +116,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                 ),
                 Expanded(
                   child: Text(
-                    'New Transaction',
+                    _isEditing ? 'Edit Transaction' : 'New Transaction',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
@@ -91,7 +126,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   builder: (context, _) {
                     return TextButton(
                       onPressed: _canSave ? _save : null,
-                      child: const Text('Add'),
+                      child: Text(widget.initial != null ? 'Save' : 'Add'),
                     );
                   },
                 ),

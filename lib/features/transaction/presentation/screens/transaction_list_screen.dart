@@ -11,13 +11,16 @@ import '../widgets/transaction_tile.dart';
 class TransactionListScreen extends ConsumerWidget {
   const TransactionListScreen({super.key});
 
-  void _openTransactionFormSheet(BuildContext context) {
+  void _openTransactionFormSheet(
+    BuildContext context, {
+    TransactionData? transaction,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      builder: (_) => const TransactionFormSheet(),
+      builder: (_) => TransactionFormSheet(initial: transaction),
     );
   }
 
@@ -93,6 +96,8 @@ class TransactionListScreen extends ConsumerWidget {
                     final t = transactions[i];
                     return TransactionTile(
                       transaction: t,
+                      onTap: () =>
+                          _openTransactionFormSheet(context, transaction: t),
                       onDelete: (t) async => _delete(context, ref, t),
                     );
                   },

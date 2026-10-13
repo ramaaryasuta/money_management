@@ -5,10 +5,12 @@ import '../../domain/transaction_data.dart';
 class TransactionTile extends StatelessWidget {
   final TransactionData transaction;
   final Future<bool?> Function(TransactionData t) onDelete;
+  final VoidCallback onTap;
   const TransactionTile({
     super.key,
     required this.transaction,
     required this.onDelete,
+    required this.onTap,
   });
 
   @override
@@ -26,6 +28,7 @@ class TransactionTile extends StatelessWidget {
       ),
       confirmDismiss: (_) => onDelete(transaction),
       child: ListTile(
+        onTap: onTap,
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
